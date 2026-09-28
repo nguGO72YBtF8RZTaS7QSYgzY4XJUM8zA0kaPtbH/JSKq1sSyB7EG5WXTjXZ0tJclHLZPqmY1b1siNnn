@@ -1,0 +1,38 @@
+name: Build XMRig
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential cmake libuv1-dev libssl-dev libhwloc-dev
+
+      - name: Clone XMRig
+        run: |
+          git clone --depth 1 https://github.com/xmrig/xmrig.git
+
+      - name: Build XMRig
+        run: |
+          mkdir xmrig/build
+          cd xmrig/build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_OPENCL=OFF -DWITH_CUDA=OFF
+          make -j$(nproc)
+
+      - name: Copy XMRig
+        run: |
+          mkdir -p bin
+          cp xmrig/build/xmrig bin/xmrig
+          chmod +x bin/xmrig
+
+      - name: Verify
+        run: |
+          ./bin/xmrig --version
